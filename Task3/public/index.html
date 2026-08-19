@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuizPulse - Online Quiz & Assessment System</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Chart.js for analytics graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-content">
+      <div class="brand-logo" onclick="app.showView('quizzes')">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-title">Quiz<span>Pulse</span></div>
+      </div>
+
+      <ul class="nav-links">
+        <li><a class="nav-link active" onclick="app.showView('quizzes')">Browse Quizzes</a></li>
+        <li><a class="nav-link" onclick="app.showView('leaderboard')">Leaderboard</a></li>
+        <li id="nav-performance-item"><a class="nav-link" onclick="app.showView('performance')">My Analytics</a></li>
+        <li id="nav-admin-item" style="display:none;"><a class="nav-link" onclick="app.showView('admin')" style="color:var(--primary-glow);">Admin Studio</a></li>
+      </ul>
+
+      <div class="user-profile-badge">
+        <div id="user-info-text" style="font-weight:600; font-size:0.9rem;">Not Logged In</div>
+        <span id="user-role-badge" class="user-role-tag user" style="display:none;">GUEST</span>
+        <button id="btn-auth-action" class="btn btn-primary btn-sm" onclick="app.openAuthModal()">Login</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="flex:1;">
+
+    <!-- VIEW 1: QUIZZES CATALOG -->
+    <section id="view-quizzes" class="view-section">
+      <div class="hero-banner">
+        <div>
+          <h1 class="hero-title">Elevate Your Skillset with <span style="color:var(--secondary-glow);">Secure Quizzes</span></h1>
+          <p class="hero-sub">Timed challenges, instant automated scoring, negative marking options, and verified performance certificates.</p>
+        </div>
+        <button class="btn btn-secondary" onclick="app.showView('leaderboard')">View Top Rankings 🏆</button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h2>Available Quizzes</h2>
+        <div style="display:flex; gap:12px;">
+          <input type="text" id="search-quiz-input" class="form-input" placeholder="Search quizzes..." style="width:250px;" onkeyup="app.filterQuizzes()">
+        </div>
+      </div>
+
+      <div id="quizzes-grid" class="grid-3">
+        <!-- Dynamic quiz cards loaded via JS -->
+      </div>
+    </section>
+
+    <!-- VIEW 2: QUIZ PLAYER -->
+    <section id="view-quiz-player" class="view-section" style="display:none;">
+      <div class="quiz-player-container">
+        <div class="timer-header">
+          <div>
+            <h3 id="player-quiz-title">Quiz Title</h3>
+            <span id="player-quiz-meta" style="color:var(--text-muted); font-size:0.85rem;">Question 1 of 10</span>
+          </div>
+          <div id="timer-display" class="timer-clock">
+            ⏱️ <span id="timer-text">10:00</span>
+          </div>
+        </div>
+
+        <div class="question-box">
+          <div id="player-q-number" class="question-number">Question 1</div>
+          <h3 id="player-q-text" class="question-title">Loading question...</h3>
+
+          <div id="player-options-container" class="options-list">
+            <!-- Dynamic option radio cards loaded via JS -->
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <button id="btn-prev-q" class="btn btn-outline" onclick="quizPlayer.prevQuestion()">← Previous</button>
+          
+          <div id="player-nav-palette" class="question-nav-grid">
+            <!-- Dynamic 1 2 3 buttons -->
+          </div>
+
+          <div>
+            <button id="btn-next-q" class="btn btn-secondary" onclick="quizPlayer.nextQuestion()">Next →</button>
+            <button id="btn-submit-quiz" class="btn btn-primary" onclick="quizPlayer.confirmSubmit()" style="display:none;">Submit Quiz 🚀</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: QUIZ RESULT -->
+    <section id="view-result" class="view-section" style="display:none;">
+      <div style="max-width:800px; margin:40px auto;">
+        <div class="glass-card" style="text-align:center; padding:40px; margin-bottom:30px;">
+          <div id="result-status-banner" style="font-size:3rem; margin-bottom:10px;">🎉</div>
+          <h2 id="result-status-title" style="font-size:2rem; margin-bottom:8px;">Congratulations!</h2>
+          <p id="result-status-sub" style="color:var(--text-muted); font-size:1.1rem;">You passed the assessment.</p>
+
+          <div style="display:flex; justify-content:center; align-items:center; gap:30px; margin:30px 0;">
+            <div>
+              <div id="result-score-val" style="font-size:3rem; font-weight:800; color:var(--primary-glow);">8 / 10</div>
+              <div style="color:var(--text-muted); font-size:0.9rem;">Total Score</div>
+            </div>
+            <div style="width:1px; height:50px; background:var(--border-glass);"></div>
+            <div>
+              <div id="result-percentage-val" style="font-size:3rem; font-weight:800; color:var(--secondary-glow);">80%</div>
+              <div style="color:var(--text-muted); font-size:0.9rem;">Percentage</div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:center; gap:16px;">
+            <button id="btn-view-certificate" class="btn btn-secondary" onclick="certificate.openModal()" style="display:none;">🎓 Download Certificate</button>
+            <button class="btn btn-outline" onclick="app.showView('quizzes')">Back to Quizzes</button>
+          </div>
+        </div>
+
+        <h3 style="margin-bottom:16px;">Detailed Question Breakdown</h3>
+        <div id="result-breakdown-container">
+          <!-- Breakdown of questions and explanations -->
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: LEADERBOARD -->
+    <section id="view-leaderboard" class="view-section" style="display:none;">
+      <div style="margin:30px 0;">
+        <h2>Global Quiz Leaderboard 🏆</h2>
+        <p style="color:var(--text-muted); margin-top:4px;">Rankings based on highest score & fastest completion time.</p>
+        
+        <div style="margin:20px 0; max-width:400px;">
+          <label class="form-label">Select Quiz</label>
+          <select id="leaderboard-quiz-select" class="form-select" onchange="app.loadLeaderboard(this.value)">
+            <!-- Options populated dynamically -->
+          </select>
+        </div>
+
+        <div class="glass-card">
+          <table class="table-glass">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Participant</th>
+                <th>Score</th>
+                <th>Percentage</th>
+                <th>Time Taken</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-tbody">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: USER PERFORMANCE ANALYTICS -->
+    <section id="view-performance" class="view-section" style="display:none;">
+      <div style="margin:30px 0;">
+        <h2>My Performance Analytics 📊</h2>
+        <p style="color:var(--text-muted); margin-top:4px;">Track your quiz attempts, score trends, and certificate accomplishments.</p>
+
+        <div class="grid-3" style="margin:24px 0;">
+          <div class="glass-card">
+            <div style="color:var(--text-muted); font-size:0.9rem;">Total Attempts</div>
+            <div id="stat-total-attempts" style="font-size:2.2rem; font-weight:800; margin-top:8px;">0</div>
+          </div>
+          <div class="glass-card">
+            <div style="color:var(--text-muted); font-size:0.9rem;">Pass Rate</div>
+            <div id="stat-pass-rate" style="font-size:2.2rem; font-weight:800; color:var(--success); margin-top:8px;">0%</div>
+          </div>
+          <div class="glass-card">
+            <div style="color:var(--text-muted); font-size:0.9rem;">Average Percentage</div>
+            <div id="stat-avg-score" style="font-size:2.2rem; font-weight:800; color:var(--secondary-glow); margin-top:8px;">0%</div>
+          </div>
+        </div>
+
+        <div class="glass-card" style="margin-bottom:30px;">
+          <h3>Score History Trend</h3>
+          <div style="height:250px; margin-top:16px;">
+            <canvas id="user-trend-chart"></canvas>
+          </div>
+        </div>
+
+        <h3>Attempt History</h3>
+        <div class="glass-card" style="margin-top:16px;">
+          <table class="table-glass">
+            <thead>
+              <tr>
+                <th>Quiz Title</th>
+                <th>Score</th>
+                <th>Percentage</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 6: ADMIN STUDIO -->
+    <section id="view-admin" class="view-section" style="display:none;">
+      <div style="margin:30px 0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div>
+            <h2>Admin Management Studio 🛠️</h2>
+            <p style="color:var(--text-muted);">Manage quizzes, create questions, set timers & negative marking rules.</p>
+          </div>
+          <button class="btn btn-primary" onclick="adminPanel.openQuizModal()">+ Create New Quiz</button>
+        </div>
+
+        <div id="admin-stats-cards" class="grid-3" style="margin-bottom:30px;">
+          <!-- Loaded via JS -->
+        </div>
+
+        <h3>Managed Quizzes</h3>
+        <div class="glass-card" style="margin-top:16px;">
+          <table class="table-glass">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Timer</th>
+                <th>Neg. Marking</th>
+                <th>Questions</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-quizzes-tbody">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- AUTH MODAL -->
+  <div id="modal-auth" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 id="auth-modal-title">Sign In to QuizPulse</h3>
+        <button class="btn btn-outline btn-sm" onclick="app.closeAuthModal()">✕</button>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid var(--border-glass); padding-bottom:10px;">
+        <button id="tab-login" class="btn btn-outline btn-sm" onclick="app.switchAuthTab('login')">Login</button>
+        <button id="tab-register" class="btn btn-outline btn-sm" onclick="app.switchAuthTab('register')">Register</button>
+      </div>
+
+      <!-- Quick Demo Login Shortcuts -->
+      <div style="background:rgba(124,58,237,0.1); border:1px dashed var(--border-glow); padding:12px; border-radius:var(--radius-md); margin-bottom:20px;">
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">Quick Demo Accounts:</div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-primary btn-sm" onclick="app.quickLogin('admin@quiz.com', 'admin123')">⚡ Admin Demo</button>
+          <button class="btn btn-secondary btn-sm" onclick="app.quickLogin('user@quiz.com', 'user123')">⚡ Student Demo</button>
+        </div>
+      </div>
+
+      <form id="auth-form" onsubmit="app.handleAuthSubmit(event)">
+        <div id="group-name" class="form-group" style="display:none;">
+          <label class="form-label">Full Name</label>
+          <input type="text" id="auth-name" class="form-input" placeholder="e.g. Alex Rivera">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="auth-email" class="form-input" required placeholder="user@quiz.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="auth-password" class="form-input" required placeholder="••••••••">
+        </div>
+        <div id="group-role" class="form-group" style="display:none;">
+          <label class="form-label">Role</label>
+          <select id="auth-role" class="form-select">
+            <option value="USER">Participant / Student</option>
+            <option value="ADMIN">Administrator</option>
+          </select>
+        </div>
+        <button type="submit" id="btn-auth-submit" class="btn btn-primary" style="width:100%;">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN QUIZ EDITOR MODAL -->
+  <div id="modal-quiz-editor" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 id="quiz-editor-title">Create New Quiz</h3>
+        <button class="btn btn-outline btn-sm" onclick="adminPanel.closeQuizModal()">✕</button>
+      </div>
+      <form onsubmit="adminPanel.saveQuiz(event)">
+        <input type="hidden" id="edit-quiz-id">
+        <div class="form-group">
+          <label class="form-label">Quiz Title</label>
+          <input type="text" id="quiz-title-input" class="form-input" required placeholder="e.g. Node.js & Express Fundamentals">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="quiz-desc-input" class="form-textarea" rows="3" placeholder="Brief overview of quiz topics..."></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <input type="text" id="quiz-cat-input" class="form-input" required value="General">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Time Limit (Minutes)</label>
+            <input type="number" id="quiz-timer-input" class="form-input" value="10" min="0">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Pass Percentage (%)</label>
+            <input type="number" id="quiz-pass-input" class="form-input" value="60" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Negative Mark Deduction</label>
+            <input type="number" step="0.05" id="quiz-neg-val-input" class="form-input" value="0.25">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+            <input type="checkbox" id="quiz-neg-toggle" style="width:18px; height:18px;">
+            <label for="quiz-neg-toggle" style="font-size:0.9rem; cursor:pointer;">Enable Negative Marking</label>
+          </div>
+          <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+            <input type="checkbox" id="quiz-rand-toggle" style="width:18px; height:18px;" checked>
+            <label for="quiz-rand-toggle" style="font-size:0.9rem; cursor:pointer;">Randomize Questions</label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">Save Quiz Settings</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN QUESTION EDITOR MODAL -->
+  <div id="modal-question-editor" class="modal-backdrop">
+    <div class="modal-box" style="max-width:700px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3>Manage Questions & Options</h3>
+        <button class="btn btn-outline btn-sm" onclick="adminPanel.closeQuestionModal()">✕</button>
+      </div>
+
+      <form onsubmit="adminPanel.saveQuestion(event)">
+        <input type="hidden" id="q-quiz-id">
+        <input type="hidden" id="q-edit-id">
+        <div class="form-group">
+          <label class="form-label">Question Text</label>
+          <textarea id="q-text-input" class="form-textarea" rows="2" required placeholder="Enter question description..."></textarea>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Marks</label>
+            <input type="number" step="0.5" id="q-marks-input" class="form-input" value="1.0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Explanation (Shown after attempt)</label>
+            <input type="text" id="q-explanation-input" class="form-input" placeholder="Why this option is correct...">
+          </div>
+        </div>
+
+        <label class="form-label">Options (Mark correct answer)</label>
+        <div id="q-options-container" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+          <!-- Option inputs injected dynamically -->
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;">Save Question</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- CERTIFICATE MODAL -->
+  <div id="modal-certificate" class="modal-backdrop">
+    <div class="modal-box" style="max-width:750px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3>Official Certificate of Completion</h3>
+        <button class="btn btn-outline btn-sm" onclick="certificate.closeModal()">✕</button>
+      </div>
+
+      <div id="certificate-print-area" class="certificate-frame">
+        <div style="font-size:3rem; margin-bottom:10px;">🏆</div>
+        <div class="certificate-title">Certificate of Achievement</div>
+        <p style="color:var(--text-muted); font-size:0.9rem;">THIS IS TO CERTIFY THAT</p>
+        <div id="cert-recipient-name" class="certificate-name">Alex Rivera</div>
+        <p style="color:var(--text-muted);">has successfully completed the assessment for</p>
+        <h2 id="cert-quiz-title" style="color:var(--secondary-glow); margin:10px 0;">Full Stack Web Development Challenge</h2>
+        <p style="font-size:0.95rem; color:var(--text-main);">Score Achieved: <strong id="cert-score-val" style="color:var(--success);">90%</strong></p>
+        <div style="margin-top:30px; font-size:0.8rem; color:var(--text-muted); display:flex; justify-content:space-between;">
+          <span>Issued Date: <strong id="cert-date-val">2026-08-12</strong></span>
+          <span>Verification ID: <strong id="cert-id-val">CERT-1-8492</strong></span>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+        <button class="btn btn-secondary" onclick="certificate.print()">🖨️ Print / Download PDF</button>
+        <button class="btn btn-outline" onclick="certificate.closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      Online Quiz System &copy; 2026 • Powered by Express & SQLite • Designed with Cyber-Violet Aesthetic
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/quizPlayer.js"></script>
+  <script src="js/adminPanel.js"></script>
+  <script src="js/certificate.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

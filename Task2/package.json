@@ -1,0 +1,27 @@
+{
+  "name": "contact-management-system",
+  "version": "1.0.0",
+  "description": "Scalable RESTful Contact Management System with Express.js, SQLite, search, pagination, sorting, and validation.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test-api.js"
+  },
+  "keywords": [
+    "express",
+    "sqlite",
+    "sequelize",
+    "contact-management",
+    "rest-api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-validator": "^7.1.0",
+    "sequelize": "^6.37.3",
+    "sqlite3": "^5.1.7"
+  }
+}

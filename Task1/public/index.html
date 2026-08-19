@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Record Management API Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">
+          <h2>EduRecord</h2>
+          <span>API Management v1.0</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="overview">
+          <span class="nav-icon">📊</span> Overview
+        </button>
+        <button class="nav-item" data-tab="students">
+          <span class="nav-icon">👨‍🎓</span> Students
+        </button>
+        <button class="nav-item" data-tab="courses">
+          <span class="nav-icon">📚</span> Courses
+        </button>
+        <button class="nav-item" data-tab="enrollments">
+          <span class="nav-icon">📝</span> Enrollments
+        </button>
+        <button class="nav-item" data-tab="explorer">
+          <span class="nav-icon">⚡</span> API Tester
+        </button>
+      </nav>
+
+      <div class="server-status">
+        <div class="status-indicator online"></div>
+        <div class="status-text">
+          <span class="status-title">Backend API</span>
+          <span class="status-subtitle" id="server-url">http://localhost:5000</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="top-header">
+        <div class="header-title">
+          <h1 id="page-title">Dashboard Overview</h1>
+          <p id="page-subtitle">Manage student records, course information, and enrollments in real-time.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" id="seed-db-btn">🌱 Reset & Seed Data</button>
+          <button class="btn btn-primary" id="primary-action-btn">+ Add Record</button>
+        </div>
+      </header>
+
+      <!-- Alert Message Banner -->
+      <div id="toast-container" class="toast-container"></div>
+
+      <!-- Tab Content: OVERVIEW -->
+      <section id="tab-overview" class="tab-content active">
+        <!-- Stats Cards Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon icon-blue">👨‍🎓</div>
+            <div class="stat-details">
+              <span class="stat-label">Total Students</span>
+              <h3 id="stat-total-students">0</h3>
+              <span class="stat-trend positive" id="stat-active-students">0 Active</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-purple">📚</div>
+            <div class="stat-details">
+              <span class="stat-label">Total Courses</span>
+              <h3 id="stat-total-courses">0</h3>
+              <span class="stat-trend neutral" id="stat-dept-courses">Across 0 Departments</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-green">📝</div>
+            <div class="stat-details">
+              <span class="stat-label">Active Enrollments</span>
+              <h3 id="stat-total-enrollments">0</h3>
+              <span class="stat-trend positive" id="stat-completed-enrollments">0 Completed</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-amber">🏫</div>
+            <div class="stat-details">
+              <span class="stat-label">Departments</span>
+              <h3 id="stat-total-departments">0</h3>
+              <span class="stat-trend neutral">Active Faculties</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Summary Lists Grid -->
+        <div class="content-grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h3>Recent Student Registrations</h3>
+              <button class="btn-link" data-switch-tab="students">View All →</button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID Code</th>
+                      <th>Name</th>
+                      <th>Department</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-students-tbody">
+                    <!-- Dynamic -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Course Enrollment Capacity</h3>
+              <button class="btn-link" data-switch-tab="courses">View All →</button>
+            </div>
+            <div class="card-body">
+              <div id="course-capacity-list" class="capacity-list">
+                <!-- Dynamic -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab Content: STUDENTS -->
+      <section id="tab-students" class="tab-content">
+        <div class="filter-bar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="students-search-input" placeholder="Search by name, email, or student ID code...">
+          </div>
+          <div class="filter-group">
+            <select id="students-dept-filter" class="form-select">
+              <option value="">All Departments</option>
+            </select>
+            <select id="students-status-filter" class="form-select">
+              <option value="">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+              <option value="Graduated">Graduated</option>
+              <option value="Suspended">Suspended</option>
+            </select>
+            <select id="students-sort-by" class="form-select">
+              <option value="createdAt">Sort: Created Date</option>
+              <option value="firstName">Sort: First Name</option>
+              <option value="lastName">Sort: Last Name</option>
+              <option value="studentIdCode">Sort: Student ID</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Department</th>
+                  <th>Year</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="students-tbody">
+                <!-- Dynamic -->
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination-bar" id="students-pagination"></div>
+        </div>
+      </section>
+
+      <!-- Tab Content: COURSES -->
+      <section id="tab-courses" class="tab-content">
+        <div class="filter-bar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="courses-search-input" placeholder="Search by course code, title, or instructor...">
+          </div>
+          <div class="filter-group">
+            <select id="courses-dept-filter" class="form-select">
+              <option value="">All Departments</option>
+            </select>
+            <select id="courses-sort-by" class="form-select">
+              <option value="code">Sort: Course Code</option>
+              <option value="title">Sort: Course Title</option>
+              <option value="credits">Sort: Credits</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Course Title</th>
+                  <th>Credits</th>
+                  <th>Instructor</th>
+                  <th>Department</th>
+                  <th>Capacity</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="courses-tbody">
+                <!-- Dynamic -->
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination-bar" id="courses-pagination"></div>
+        </div>
+      </section>
+
+      <!-- Tab Content: ENROLLMENTS -->
+      <section id="tab-enrollments" class="tab-content">
+        <div class="filter-bar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="enrollments-search-input" placeholder="Search by student name or course code...">
+          </div>
+          <div class="filter-group">
+            <select id="enrollments-status-filter" class="form-select">
+              <option value="">All Statuses</option>
+              <option value="Enrolled">Enrolled</option>
+              <option value="Completed">Completed</option>
+              <option value="Dropped">Dropped</option>
+            </select>
+            <select id="enrollments-grade-filter" class="form-select">
+              <option value="">All Grades</option>
+              <option value="A">Grade A</option>
+              <option value="B">Grade B</option>
+              <option value="C">Grade C</option>
+              <option value="D">Grade D</option>
+              <option value="F">Grade F</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Date Enrolled</th>
+                  <th>Status</th>
+                  <th>Grade</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="enrollments-tbody">
+                <!-- Dynamic -->
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination-bar" id="enrollments-pagination"></div>
+        </div>
+      </section>
+
+      <!-- Tab Content: API TESTER -->
+      <section id="tab-explorer" class="tab-content">
+        <div class="api-tester-container">
+          <div class="api-controls card">
+            <h3>API Endpoint Tester</h3>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label>Method</label>
+                <select id="api-test-method" class="form-select">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="PATCH">PATCH</option>
+                  <option value="DELETE">DELETE</option>
+                </select>
+              </div>
+              <div class="form-group flex-3">
+                <label>Endpoint URL</label>
+                <input type="text" id="api-test-url" class="form-control" value="/api/students">
+              </div>
+              <div class="form-group" style="align-self: flex-end;">
+                <button class="btn btn-primary" id="api-test-send">🚀 Send Request</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Preset Endpoints</label>
+              <div class="preset-buttons">
+                <button class="preset-btn" data-method="GET" data-url="/api/students?page=1&limit=5&sortBy=firstName">List Students (Paginated)</button>
+                <button class="preset-btn" data-method="GET" data-url="/api/courses?department=Computer Science">Filter CS Courses</button>
+                <button class="preset-btn" data-method="GET" data-url="/api/enrollments?status=Enrolled">List Active Enrollments</button>
+                <button class="preset-btn" data-method="POST" data-url="/api/students">Create Invalid Student (Validation Test)</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Request JSON Payload (for POST/PUT/PATCH)</label>
+              <textarea id="api-test-body" class="form-control code-font" rows="5" placeholder='{"firstName": "John", "lastName": "Doe", ...}'></textarea>
+            </div>
+          </div>
+
+          <div class="api-response card">
+            <div class="card-header">
+              <h3>Response Viewer</h3>
+              <div id="response-status-badge" class="badge">Awaiting request...</div>
+            </div>
+            <pre id="api-response-output" class="code-output">// Response JSON will be displayed here...</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Component for Adding/Editing Records -->
+  <div id="modal-backdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Add Record</h3>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Dynamic Form Content -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
